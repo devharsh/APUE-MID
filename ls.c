@@ -1,18 +1,4 @@
-/*
- * simple-ls2.c
- * Extremely low-power ls clone.
- * ./simple-ls2 .
- */
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <dirent.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include "ls.h"
 
 char* permissions(char* file) {
 	struct stat st;
