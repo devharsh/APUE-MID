@@ -34,41 +34,7 @@ int main
 	for(; optind < argc; optind++) {      
 		fhit = 1;
 		printf("extra arguments: %s\n", argv[optind]);  
-
-		char *p = argv[optind];
-		char *pp[] = {p, NULL};
-
-		FTS *ftsp = fts_open(pp, 0, NULL);
-		if(ftsp == NULL) {
-			perror("fts_open");
-			exit(1);
-		}
-
-		while(1) {
-			FTSENT *ent = fts_read(ftsp);
-			if(ent == NULL) {
-				if(errno == 0)
-					break;
-				else {
-					perror("fts_read");
-					exit(1);
-				}
-			}
-			
-			if(ent->fts_info & FTS_D)
-				printf("Enter dir: ");
-			else if(ent->fts_info & FTS_DP)
-				printf("Exit dir:  ");
-			else if(ent->fts_info & FTS_F)
-				printf("File:      ");
-			else 
-				printf("Other:     ");
-
-			printf("%s\n", ent->fts_path);
-		}	
-
-		if(fts_close(ftsp) == -1)
-			perror("fts_close");
+		fts_helper(argv[optind]);
 	}
       
 	if(!fhit) {
@@ -77,8 +43,45 @@ int main
 		if(c == NULL)
 			perror("getcwd");
 		else
-			printf("extra arguments: %s found\n", cwd);
+			fts_helper(cwd);
 	}
 
 	return 0; 
+}
+
+void
+fts_helper(char *g) {
+        char *pp[] = {g, NULL};
+
+        FTS *ftsp = fts_open(pp, 0, NULL);
+        if(ftsp == NULL) {
+        	perror("fts_open");
+        	exit(1);
+        }
+
+        while(1) {
+        	FTSENT *ent = fts_read(ftsp);
+        	if(ent == NULL) {
+                        if(errno == 0)
+				break;
+                        else {
+				perror("fts_read");
+				exit(1);
+                        }
+                }
+                        
+                if(ent->fts_info & FTS_D)
+			printf("Enter dir: ");
+                else if(ent->fts_info & FTS_DP)
+                        printf("Exit dir:  ");
+                else if(ent->fts_info & FTS_F)
+                        printf("File:      ");
+                else 
+                        printf("Other:     ");
+
+                printf("%s\n", ent->fts_path);
+        }       
+
+        if(fts_close(ftsp) == -1)
+        	perror("fts_close");
 } 

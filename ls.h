@@ -20,3 +20,6 @@
 #include <unistd.h>
 
 #define PATH_LIM 4096
+
+void
+fts_helper(char *g);
