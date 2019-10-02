@@ -33,7 +33,6 @@ int main
 
 	for(; optind < argc; optind++) {      
 		fhit = 1;
-		printf("extra arguments: %s\n", argv[optind]);  
 		fts_helper(argv[optind]);
 	}
       
@@ -49,11 +48,14 @@ int main
 	return 0; 
 }
 
+/*
+*
+*/
 void
 fts_helper(char *g) {
         char *pp[] = {g, NULL};
 
-        FTS *ftsp = fts_open(pp, 0, NULL);
+        FTS *ftsp = fts_open(pp, 0, &compare);
         if(ftsp == NULL) {
         	perror("fts_open");
         	exit(1);
@@ -69,19 +71,34 @@ fts_helper(char *g) {
 				exit(1);
                         }
                 }
-                        
-                if(ent->fts_info & FTS_D)
-			printf("Enter dir: ");
-                else if(ent->fts_info & FTS_DP)
-                        printf("Exit dir:  ");
-                else if(ent->fts_info & FTS_F)
-                        printf("File:      ");
-                else 
-                        printf("Other:     ");
 
-                printf("%s\n", ent->fts_path);
-        }       
+		int print = 0; 
+		switch (ent->fts_info) { 
+                	case FTS_D :
+				print = 1;
+				break;
+                	case FTS_F :
+				print = 1;
+				break; 
+                	case FTS_SL:
+                    		break;
+                	default:
+                    		break;
+            	}
+                
+		if(print && ent->fts_level == 1)
+                	printf("%s\t", ent->fts_name);
+	}       
 
         if(fts_close(ftsp) == -1)
         	perror("fts_close");
+
+	printf("\n");
+}
+
+/*
+*
+*/
+int compare(const FTSENT ** first, const FTSENT ** second) {
+	return (strcmp((*first)->fts_name, (*second)->fts_name));
 } 

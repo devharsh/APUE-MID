@@ -23,3 +23,6 @@
 
 void
 fts_helper(char *g);
+
+int 
+compare(const FTSENT** one, const FTSENT** two);
