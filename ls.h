@@ -10,6 +10,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fts.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>

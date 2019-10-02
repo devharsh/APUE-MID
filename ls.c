@@ -1,4 +1,4 @@
-#include "ls.h"
+#include "ls.h"  
 
 /*
 * This program simulates the behaviour of a standard ls
@@ -6,99 +6,79 @@
 * path as a argument, if it is not provided it takes
 * present working directory as default. It can be used
 * with some switch arguments as provided.
-*/
-int
-main(int argc, char **argv) {
-	DIR* dp;
-	char ch;
+*/  
+int main
+(int argc, char * argv[]) {  
+	int opt = 0; 
+	int fhit = 0;
+      
+	while((opt = getopt(argc, argv,":if:lrx")) != -1) {  
+        	switch(opt) {  
+            		case 'i':  
+            		case 'l':  
+            		case 'r':  
+                		printf("option: %c\n", opt);  
+                		break;  
+            		case 'f':  
+                		printf("filename: %s\n", optarg);  
+                		break;  
+            		case ':':  
+                		printf("option needs a value\n");  
+                		break;  
+            		case '?':  
+                		printf("unknown option: %c\n", optopt); 
+                		break;  
+        	}  
+    	}  
 
-	int total = 0;
-	int i, c = 0;
-	opterr = 0;
+	for(; optind < argc; optind++) {      
+		fhit = 1;
+		printf("extra arguments: %s\n", argv[optind]);  
 
-	struct stat st;
-	struct dirent** dirpa;
-	struct group* grp;
-	struct passwd* pwd;
-	struct tm* time_c;
- 
-	if(argc < 1) {
-		perror("argument error");
-		exit(1);
-	}
+		char *p = argv[optind];
+		char *pp[] = {p, NULL};
 
-	if (argc == 1) {
-		char cwd[PATH_LIM];
-		getcwd(cwd, sizeof(cwd));
-		argv[1] = cwd;
-		argc = 2;
-	}
-	
-	/* iterate over all arguments */
-	for(i=1; i<argc; i++) {
-		if ((dp = opendir(argv[i])) == NULL ) {
-			fprintf(stderr, "can't open '%s'\n", argv[i]);
+		FTS *ftsp = fts_open(pp, 0, NULL);
+		if(ftsp == NULL) {
+			perror("fts_open");
 			exit(1);
-			closedir(dp); /* TODO: check for errors */
 		}
 
-		c = scandir(argv[i], &dirpa, NULL, alphasort);
-		
-		if (c < 0)
-			perror("scandir");
-		else {
-			int k;
-			for(k=0; k<c; k++) {
-				while ((ch = getopt (argc, argv, "abc:")) != -1) {
-                			switch (ch) {
-                        			case 'a':
-                                			break;
-                        			case 'l':
-                                			break;
-                        			default:
-							printf("%s\t", dirpa[k]->d_name);
-                			}
-        			}
-
-				if (stat(dirpa[k]->d_name, &st) != 0)
-    					perror("stat() error");
+		while(1) {
+			FTSENT *ent = fts_read(ftsp);
+			if(ent == NULL) {
+				if(errno == 0)
+					break;
 				else {
-					grp = getgrgid(st.st_gid);
-					pwd = getpwuid(st.st_uid);
-			
-					total += (int)(st.st_blocks);
-					char buffer[80];
-					time_c = localtime(&st.st_ctime);
-					strftime(buffer, 80, "%b %d %H:%M", time_c);
-				
-					char *modeval = malloc(11);
-                			mode_t perm = st.st_mode;
-                
-                			modeval[0] = (perm & S_IFDIR) ? 'd' : '-';
-                			modeval[1] = (perm & S_IRUSR) ? 'r' : '-';
-                			modeval[2] = (perm & S_IWUSR) ? 'w' : '-';
-                			modeval[3] = (perm & S_IXUSR) ? 'x' : '-';
-                			modeval[4] = (perm & S_IRGRP) ? 'r' : '-';
-                			modeval[5] = (perm & S_IWGRP) ? 'w' : '-';
-                			modeval[6] = (perm & S_IXGRP) ? 'x' : '-';
-                			modeval[7] = (perm & S_IROTH) ? 'r' : '-';
-                			modeval[8] = (perm & S_IWOTH) ? 'w' : '-';
-                			modeval[9] = (perm & S_IXOTH) ? 'x' : '-';
-                			modeval[10] = '\0';
-
-					printf("%s\t%d\t%s\t%s\t%ld\t%s\t%s\n",
-					modeval, st.st_nlink,
-					pwd->pw_name, grp->gr_name, 
-					st.st_size, buffer, dirpa[k]->d_name);
-
-					free(dirpa[k]);
+					perror("fts_read");
+					exit(1);
 				}
 			}
-			free(dirpa);
-		}
-		
-		printf("total = %d\n", total);
+			
+			if(ent->fts_info & FTS_D)
+				printf("Enter dir: ");
+			else if(ent->fts_info & FTS_DP)
+				printf("Exit dir:  ");
+			else if(ent->fts_info & FTS_F)
+				printf("File:      ");
+			else 
+				printf("Other:     ");
+
+			printf("%s\n", ent->fts_path);
+		}	
+
+		if(fts_close(ftsp) == -1)
+			perror("fts_close");
+	}
+      
+	if(!fhit) {
+		char cwd[PATH_LIM];
+                char *c = getcwd(cwd, sizeof(cwd));
+		if(c == NULL)
+			perror("getcwd");
+		else
+			printf("extra arguments: %s found\n", cwd);
 	}
 
-	return(0);
-}
+	return 0; 
+} 
