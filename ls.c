@@ -37,42 +37,63 @@ int main
         	switch(opt) {
 			case 'A':
 				is_A_on = 1;
+				break;
 			case 'a':
 				is_a_on = 1;
+				break;
 			case 'c':
 				is_c_on = 1;
+				break;
 			case 'd':
 				is_d_on = 1;
+				break;
 			case 'F':
 				is_F_on = 1;
+				break;
 			case 'f':
 				is_f_on = 1;
+				break;
   			case 'h':
 				is_h_on = 1;
+				break;
             		case 'i':
 				is_i_on = 1;
+				break;
 			case 'k':
 				is_k_on = 1;
+				break;
             		case 'l':
 				is_l_on = 1;
+				break;
 			case 'n':
 				is_n_on = 1;
+				break;
 			case 'q':
 				is_q_on = 1;
+				break;
 			case 'R':
 				is_R_on = 1;
+				break;
 			case 'r':  
 				is_r_on = 1;
+				break;
             		case 'S':
 				is_S_on = 1;
+				break;
 			case 's':
 				is_s_on = 1;
+				break;
 			case 't':
 				is_t_on = 1;
+				break;
 			case 'u':
 				is_u_on = 1;
+				break;
 			case 'w':
 				is_w_on = 1;
+				break;
+			default:
+				break;
         	}  
     	}  
 
@@ -182,11 +203,13 @@ int main
 		else {
 			int total = 0;
                 	int print = 0;
+			int s_total = 0;
 
                 	struct group* grp;
                 	struct passwd* pwd;
                 	struct tm* time_c;
 
+			char F_char;
                 	char buffer[80];
                 	char *modeval = malloc(11);
                 	char * pp[2];
@@ -216,11 +239,14 @@ int main
                         	switch (ent->fts_info) { 
                                 	case FTS_D :
                                         	print = 1;
+						F_char = '/';
                                         	break;
                                 	case FTS_F :
                                         	print = 1;
+						F_char = 0;
                                         	break; 
                                 	case FTS_SL:
+						F_char = '@';
                                         	break;
                                 	default:
                                         	break;
@@ -232,8 +258,20 @@ int main
                         	total += (int)(ent->fts_statp->st_blocks);
                         	time_c = localtime(&ent->fts_statp->st_ctime);
                         	strftime(buffer, 80, "%b %d %H:%M", time_c);
-                        	mode_t perm = ent->fts_statp->st_mode;
-                
+                        	
+				mode_t perm = ent->fts_statp->st_mode;
+				if(S_ISREG(perm))
+					F_char = 0;
+				if(S_ISDIR(perm))
+					F_char = '/';
+				if(S_ISCHR(perm))
+				if(S_ISBLK(perm))
+				if(S_ISFIFO(perm))
+					F_char = '|';
+				if(S_ISLNK(perm))
+					F_char = '@';
+				if(S_ISSOCK(perm))
+					F_char = '=';
                         	modeval[0] = (perm & S_IFDIR) ? 'd' : '-';
                         	modeval[1] = (perm & S_IRUSR) ? 'r' : '-';
                         	modeval[2] = (perm & S_IWUSR) ? 'w' : '-';
@@ -252,7 +290,13 @@ int main
                                                 	modeval, ent->fts_statp->st_nlink,
                                                 	pwd->pw_name, grp->gr_name, 
                                                 	ent->fts_statp->st_size, buffer);
-                                	printf(ent->fts_name);
+                                	if(is_s_on) {
+						printf("%d ", ent->fts_statp->st_blocks);
+						s_total += ent->fts_statp->st_blocks;
+					}
+					printf("%s", ent->fts_name);
+					if(is_F_on) 
+						printf("%c", F_char);
                                 	if(is_l_on)
                                         	printf("\n");
                                 	else
@@ -262,7 +306,8 @@ int main
                 
                 	if(is_l_on)       
                         	printf("total %d", total); 
-
+			if(is_s_on)
+				printf("\ntotal %d", s_total);
                 	if(fts_close(ftsp) == -1)
                         	perror("fts_close");
 
