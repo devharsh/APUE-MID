@@ -25,4 +25,7 @@ void
 fts_helper(char *g);
 
 int 
-compare(const FTSENT** one, const FTSENT** two);
+compare(const FTSENT ** first, const FTSENT ** second);
+
+int
+rev_compare(const FTSENT ** first, const FTSENT ** second);

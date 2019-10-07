@@ -12,30 +12,166 @@ int main
 (int argc, char * argv[]) {  
 	int opt = 0; 
 	int fhit = 0;
-      
-	while((opt = getopt(argc, argv,":if:lrx")) != -1) {  
-        	switch(opt) {  
-            		case 'i':  
-            		case 'l':  
-				break;
+
+	int is_A_on = 0;
+	int is_a_on = 0;
+	int is_c_on = 0;
+	int is_d_on = 0;
+	int is_F_on = 0;
+	int is_f_on = 0;
+	int is_h_on = 0;
+	int is_i_on = 0;
+	int is_k_on = 0;
+	int is_l_on = 0;
+     	int is_n_on = 0;
+ 	int is_q_on = 0;
+	int is_R_on = 0;
+	int is_r_on = 0;
+	int is_S_on = 0;
+	int is_s_on = 0;
+	int is_t_on = 0;
+	int is_u_on = 0;
+	int is_w_on = 0;
+
+	while((opt = getopt(argc, argv,"AacdFfhiklnqRrSstuw")) != -1) {  
+        	switch(opt) {
+			case 'A':
+				is_A_on = 1;
+			case 'a':
+				is_a_on = 1;
+			case 'c':
+				is_c_on = 1;
+			case 'd':
+				is_d_on = 1;
+			case 'F':
+				is_F_on = 1;
+			case 'f':
+				is_f_on = 1;
+  			case 'h':
+				is_h_on = 1;
+            		case 'i':
+				is_i_on = 1;
+			case 'k':
+				is_k_on = 1;
+            		case 'l':
+				is_l_on = 1;
+			case 'n':
+				is_n_on = 1;
+			case 'q':
+				is_q_on = 1;
+			case 'R':
+				is_R_on = 1;
 			case 'r':  
-                		printf("option: %c\n", opt);  
-                		break;  
-            		case 'f':  
-                		printf("filename: %s\n", optarg);  
-                		break;  
-            		case ':':  
-                		printf("option needs a value\n");  
-                		break;  
-            		case '?':  
-                		printf("unknown option: %c\n", optopt); 
-                		break;  
+				is_r_on = 1;
+            		case 'S':
+				is_S_on = 1;
+			case 's':
+				is_s_on = 1;
+			case 't':
+				is_t_on = 1;
+			case 'u':
+				is_u_on = 1;
+			case 'w':
+				is_w_on = 1;
         	}  
     	}  
 
 	for(; optind < argc; optind++) {      
 		fhit = 1;
-		fts_helper(argv[optind]);
+
+		int total = 0;
+        	int print = 0;
+		int s_total = 0;
+
+        	struct group* grp;
+        	struct passwd* pwd;
+        	struct tm* time_c;
+
+        	char buffer[80];
+        	char *modeval = malloc(11);
+        	char * pp[2];
+
+        	FTS *ftsp;
+
+        	pp[0] = argv[optind];
+        	pp[1] = NULL;
+
+        	ftsp = fts_open(pp, 0, &compare);
+        	if(ftsp == NULL) {
+                	perror("fts_open");
+                	exit(1);
+        	}
+
+        	while(1) {
+                	FTSENT *ent = fts_read(ftsp);
+                	if(ent == NULL) {
+                        	if(errno == 0)
+                                	break;
+                        	else {
+                                	perror("fts_read");
+                                	exit(1);
+                        	}
+                	}
+
+                	switch (ent->fts_info) { 
+                        	case FTS_D :
+                                	print = 1;
+                                	break;
+                        	case FTS_F :
+                                	print = 1;
+                                	break; 
+                        	case FTS_SL:
+                                	break;
+                        	default:
+                                	break;
+                	}
+               
+                	grp = getgrgid(ent->fts_statp->st_gid);
+                	pwd = getpwuid(ent->fts_statp->st_uid);
+                      
+                	total += (int)(ent->fts_statp->st_blocks);
+                	time_c = localtime(&ent->fts_statp->st_ctime);
+                	strftime(buffer, 80, "%b %d %H:%M", time_c);
+                	mode_t perm = ent->fts_statp->st_mode;
+                
+                	modeval[0] = (perm & S_IFDIR) ? 'd' : '-';
+                	modeval[1] = (perm & S_IRUSR) ? 'r' : '-';
+                	modeval[2] = (perm & S_IWUSR) ? 'w' : '-';
+                	modeval[3] = (perm & S_IXUSR) ? 'x' : '-';
+                	modeval[4] = (perm & S_IRGRP) ? 'r' : '-';
+                	modeval[5] = (perm & S_IWGRP) ? 'w' : '-';
+                	modeval[6] = (perm & S_IXGRP) ? 'x' : '-';
+                	modeval[7] = (perm & S_IROTH) ? 'r' : '-';
+                	modeval[8] = (perm & S_IWOTH) ? 'w' : '-';
+                	modeval[9] = (perm & S_IXOTH) ? 'x' : '-';
+                	modeval[10] = '\0';
+
+                	if(print && ent->fts_level == 1 && ent->fts_info != 1) {
+				if(is_l_on)
+                        		printf("%s\t%d\t%s\t%s\t%ld\t%s\t",
+                                		modeval, ent->fts_statp->st_nlink,
+                                		pwd->pw_name, grp->gr_name, 
+                                		ent->fts_statp->st_size, buffer);
+                		if(is_s_on) {
+					printf("%d ", ent->fts_statp->st_blocks);
+					s_total += ent->fts_statp->st_blocks;
+				}
+				printf("%s", ent->fts_name);
+				if(is_l_on)
+					printf("\n");
+				else
+					printf("\t");
+			}                                        
+        	}      
+ 		
+		if(is_l_on)       
+        		printf("total %d", total); 
+		if(is_s_on)
+			printf("\ntotal %d", s_total);
+		if(fts_close(ftsp) == -1)
+			perror("fts_close");
+
+        	printf("\n");
 	}
       
 	if(!fhit) {
@@ -43,8 +179,95 @@ int main
                 char* c = getcwd(cwd, sizeof(cwd));
 		if(c == NULL)
 			perror("getcwd");
-		else
-			fts_helper(cwd);
+		else {
+			int total = 0;
+                	int print = 0;
+
+                	struct group* grp;
+                	struct passwd* pwd;
+                	struct tm* time_c;
+
+                	char buffer[80];
+                	char *modeval = malloc(11);
+                	char * pp[2];
+
+                	FTS *ftsp;
+
+                	pp[0] = cwd;
+                	pp[1] = NULL;
+
+                	ftsp = fts_open(pp, 0, &compare);
+                	if(ftsp == NULL) {
+                        	perror("fts_open");
+                        	exit(1);
+                	}
+
+                	while(1) {
+                        	FTSENT *ent = fts_read(ftsp);
+                        	if(ent == NULL) {
+                                	if(errno == 0)
+                                        	break;
+                                	else {
+                                        	perror("fts_read");
+                                        	exit(1);
+                                	}
+                        	}
+
+                        	switch (ent->fts_info) { 
+                                	case FTS_D :
+                                        	print = 1;
+                                        	break;
+                                	case FTS_F :
+                                        	print = 1;
+                                        	break; 
+                                	case FTS_SL:
+                                        	break;
+                                	default:
+                                        	break;
+                        	}
+               
+                        	grp = getgrgid(ent->fts_statp->st_gid);
+                        	pwd = getpwuid(ent->fts_statp->st_uid);
+                      
+                        	total += (int)(ent->fts_statp->st_blocks);
+                        	time_c = localtime(&ent->fts_statp->st_ctime);
+                        	strftime(buffer, 80, "%b %d %H:%M", time_c);
+                        	mode_t perm = ent->fts_statp->st_mode;
+                
+                        	modeval[0] = (perm & S_IFDIR) ? 'd' : '-';
+                        	modeval[1] = (perm & S_IRUSR) ? 'r' : '-';
+                        	modeval[2] = (perm & S_IWUSR) ? 'w' : '-';
+                        	modeval[3] = (perm & S_IXUSR) ? 'x' : '-';
+                        	modeval[4] = (perm & S_IRGRP) ? 'r' : '-';
+                        	modeval[5] = (perm & S_IWGRP) ? 'w' : '-';
+                        	modeval[6] = (perm & S_IXGRP) ? 'x' : '-';
+                        	modeval[7] = (perm & S_IROTH) ? 'r' : '-';
+                        	modeval[8] = (perm & S_IWOTH) ? 'w' : '-';
+                        	modeval[9] = (perm & S_IXOTH) ? 'x' : '-';
+                        	modeval[10] = '\0';
+
+                        	if(print && ent->fts_level == 1 && ent->fts_info != 1) {
+                                	if(is_l_on)
+                                        	printf("%s\t%d\t%s\t%s\t%ld\t%s\t",
+                                                	modeval, ent->fts_statp->st_nlink,
+                                                	pwd->pw_name, grp->gr_name, 
+                                                	ent->fts_statp->st_size, buffer);
+                                	printf(ent->fts_name);
+                                	if(is_l_on)
+                                        	printf("\n");
+                                	else
+                                        	printf("\t");
+                        	}                                        
+                	}      
+                
+                	if(is_l_on)       
+                        	printf("total %d", total); 
+
+                	if(fts_close(ftsp) == -1)
+                        	perror("fts_close");
+
+                	printf("\n");
+		}
 	}
 
 	return 0; 
@@ -101,13 +324,6 @@ fts_helper(char *g) {
                     		break;
             	}
                
-		/* 
-		if(print && ent->fts_level == 1)
-                	printf("%s\t", ent->fts_name);
-		*/
-
-
-
 		grp = getgrgid(ent->fts_statp->st_gid);
                 pwd = getpwuid(ent->fts_statp->st_uid);
                       
@@ -128,7 +344,7 @@ fts_helper(char *g) {
                 modeval[9] = (perm & S_IXOTH) ? 'x' : '-';
                 modeval[10] = '\0';
 
-		if(print && ent->fts_level == 1)
+		if(print && ent->fts_level == 1 && ent->fts_info != 1)
                 	printf("%s\t%d\t%s\t%s\t%ld\t%s\t%s\n",
                 		modeval, ent->fts_statp->st_nlink,
                 		pwd->pw_name, grp->gr_name, 
@@ -136,7 +352,7 @@ fts_helper(char *g) {
                                                         
 	}      
 	
-	printf("total %d\n", total); 
+	printf("total %d", total); 
 
         if(fts_close(ftsp) == -1)
         	perror("fts_close");
@@ -149,4 +365,12 @@ fts_helper(char *g) {
 */
 int compare(const FTSENT ** first, const FTSENT ** second) {
 	return (strcmp((*first)->fts_name, (*second)->fts_name));
+}
+
+
+/*
+*
+*/
+int rev_compare(const FTSENT ** first, const FTSENT ** second) {
+	return (strcmp((*second)->fts_name, (*first)->fts_name));
 } 
