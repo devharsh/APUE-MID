@@ -139,7 +139,7 @@ int main
                         	}
                 	}
 
-			fts_helper(ent, modeval, buffer, &F_char, &print);
+			fts_helper(ent, modeval, buffer, &F_char);
 
                         grp = getgrgid(ent->fts_statp->st_gid);
                         pwd = getpwuid(ent->fts_statp->st_uid);
@@ -204,21 +204,46 @@ int main
                                         }
                                 }	 
 	
-				fts_helper(ent, modeval, buffer, &F_char, &print);
+				fts_helper(ent, modeval, buffer, &F_char);
 
 				grp = getgrgid(ent->fts_statp->st_gid);
                                 pwd = getpwuid(ent->fts_statp->st_uid);
 
-				if(print && ent->fts_level == 1 && ent->fts_info != 1) {
+				if (ent->fts_info == FTS_D) {
+					if(is_A_on)
+						print = 1;
+					else
+						print = 0;
+				} else if (ent->fts_info == FTS_DC) {
+					print = 0;
+				} else if (ent->fts_info == FTS_DEFAULT) {
+				} else if (ent->fts_info == FTS_DNR) {
+				} else if (ent->fts_info == FTS_DOT) {
+					print = 1;
+				} else if (ent->fts_info == FTS_DP) {
+					print = 0;
+				} else if (ent->fts_info == FTS_ERR) {
+					print = 0;
+				} else if (ent->fts_info == FTS_F) {
+					print = 1;
+				} else if (ent->fts_info == FTS_INIT ) {
+				} else if (ent->fts_info == FTS_NS) {
+				} else if (ent->fts_info == FTS_NSOK) {
+				} else if (ent->fts_info == FTS_SL) {
+				} else if (ent->fts_info == FTS_SLNONE) {
+				} else if (ent->fts_info == FTS_W) {
+				}
+
+				if(ent->fts_level == 1 && print) {
                                 	if(is_l_on)
                                         	printf("%s\t%d\t%s\t%s\t%ld\t%s\t",
                                                 	modeval, ent->fts_statp->st_nlink,
                                                 	pwd->pw_name, grp->gr_name, 
                                                 	ent->fts_statp->st_size, buffer);
-                                	if(is_l_on || is_s_on) {
+                                	if(is_s_on)
 						printf("%d ", ent->fts_statp->st_blocks);
+					if(is_l_on || is_s_on)
 						total += ent->fts_statp->st_blocks;
-					}
 					printf("%s", ent->fts_name);
 					if(is_F_on) 
 						printf("%c", F_char);
@@ -244,23 +269,10 @@ int main
 }
 
 /*
-*
-*/
+ *
+ */
 void
-fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char, int *print) {
-        switch (ent->fts_info) {
-        	case FTS_D :
-        		*print = 1;
-        		break;
-        	case FTS_F :
-        		*print = 1;
-        		break;
-        	case FTS_SL:
-        		break;
-        	default:
-        		break;
-        }
-               
+fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char) {
         mode_t perm = ent->fts_statp->st_mode;
         
 	if(S_ISREG(perm))
