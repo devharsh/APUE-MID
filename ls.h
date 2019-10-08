@@ -22,7 +22,7 @@
 #define PATH_LIM 4096
 
 void
-fts_helper(char *g);
+fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char, int *print);
 
 int 
 compare(const FTSENT ** first, const FTSENT ** second);
