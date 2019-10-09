@@ -11,40 +11,7 @@
 int main
 (int argc, char * argv[]) {  
 	
-	int opt = 0; 
-	int fhit = 0;
-	int print = 0;
-	int total = 0;
-
-	int is_A_on = 0;
-	int is_a_on = 0;
-	int is_c_on = 0;
-	int is_d_on = 0;
-	int is_F_on = 0;
-	int is_f_on = 0;
-	int is_h_on = 0;
-	int is_i_on = 0;
-	int is_k_on = 0;
-	int is_l_on = 0;
-     	int is_n_on = 0;
- 	int is_q_on = 0;
-	int is_R_on = 0;
-	int is_r_on = 0;
-	int is_S_on = 0;
-	int is_s_on = 0;
-	int is_t_on = 0;
-	int is_u_on = 0;
-	int is_w_on = 0;
-
-	char F_char;
-	char buffer[80];
 	char *modeval = malloc(11);
-	char *pp[2];
-
-	struct group* grp;
-	struct passwd* pwd;
-
-	FTS *ftsp;
 
 	while((opt = getopt(argc, argv,"AacdFfhiklnqRrSstuw")) != -1) {  
         	switch(opt) {
@@ -124,13 +91,26 @@ int main
 
         	pp[0] = argv[optind];
 
-		if(is_r_on)
-			ftsp = fts_open(pp, 0, &rev_compare);
-		else if(is_S_on)
-			ftsp = fts_open(pp, 0, &size_compare);
-		else
-        		ftsp = fts_open(pp, 0, &compare);
-        	
+		if(is_r_on) {
+                	ftsp = fts_open(pp, 0, &rev_name_compare);
+
+                	if(is_S_on)
+                		ftsp = fts_open(pp, 0, &rev_size_compare);
+                	if(is_t_on)
+                		ftsp = fts_open(pp, 0, &rev_mtime_compare);
+                	if(is_u_on)
+                		ftsp = fts_open(pp, 0, &rev_atime_compare);
+                } else {
+                	ftsp = fts_open(pp, 0, &name_compare);
+
+                	if(is_S_on)
+                		ftsp = fts_open(pp, 0, &size_compare);
+                	if(is_t_on)
+                		ftsp = fts_open(pp, 0, &mtime_compare);
+                	if(is_u_on)
+                		ftsp = fts_open(pp, 0, &atime_compare);
+                }	
+
 		if(ftsp == NULL) {
                 	perror("fts_open");
                 	exit(1);
@@ -152,30 +132,68 @@ int main
 
                         grp = getgrgid(ent->fts_statp->st_gid);
                         pwd = getpwuid(ent->fts_statp->st_uid);
-
-                        if(print && ent->fts_level == 1 && ent->fts_info != 1) {
-                        	if(is_l_on)
-                        		printf("%s\t%d\t%s\t%s\t%ld\t%s\t",
-                        			modeval, ent->fts_statp->st_nlink,
-                        			pwd->pw_name, grp->gr_name, 
-                        			ent->fts_statp->st_size, buffer);
-                        	if(is_l_on || is_s_on) {
-                        		printf("%d ", ent->fts_statp->st_blocks);
-                        		total += ent->fts_statp->st_blocks;
-                        	}
-                        	printf("%s", ent->fts_name);
-                        	if(is_F_on) 
-                        		printf("%c", F_char);
-                        	if(is_l_on)
+			
+			if (ent->fts_info == FTS_D) {
+				if(is_A_on)
+					print = 1;
+				else
+					print = 0;
+			} else if (ent->fts_info == FTS_DC) {
+				print = 0;
+			} else if (ent->fts_info == FTS_DEFAULT) {
+			} else if (ent->fts_info == FTS_DNR) {
+			} else if (ent->fts_info == FTS_DOT) {
+				print = 1;
+			} else if (ent->fts_info == FTS_DP) {
+				print = 0;
+			} else if (ent->fts_info == FTS_ERR) {
+				print = 0;
+			} else if (ent->fts_info == FTS_F) {
+				print = 1;
+			} else if (ent->fts_info == FTS_INIT ) {
+			} else if (ent->fts_info == FTS_NS) {
+			} else if (ent->fts_info == FTS_NSOK) {
+			} else if (ent->fts_info == FTS_SL) {
+			} else if (ent->fts_info == FTS_SLNONE) {
+			} else if (ent->fts_info == FTS_W) {
+			} else {
+				print = 0;
+			}
+		
+			if(ent->fts_level == 1 && print) {
+                        	if(is_n_on || is_l_on)
+                        		printf("%s\t%d\t",
+                        			modeval, ent->fts_statp->st_nlink);
+                        	if(is_n_on)
+					printf("%d\t%d\t",
+						pwd->pw_uid, grp->gr_gid);
+				if(is_l_on)
+					printf("%s\t%s\t",
+						pwd->pw_name, grp->gr_name);
+				if(is_n_on || is_l_on)
+					printf("%ld\t%s\t",
+						ent->fts_statp->st_size, buffer);
+				if(is_i_on)
+					printf("%lu ", ent->fts_statp->st_ino);
+				if(is_s_on)
+					printf("%ld ", ent->fts_statp->st_blocks);
+				if(is_n_on || is_l_on || is_s_on)
+					total += ent->fts_statp->st_blocks;
+					
+				printf("%s", ent->fts_name);
+				
+				if(is_F_on) 
+					printf("%c", F_char);
+                        	if(is_n_on || is_l_on)
                         		printf("\n");
                         	else
                         		printf("\t");
-                        }
+                       	}	
         	}      
- 	
+
 		if(is_s_on)
 			printf("\n");	
-		if(is_l_on || is_s_on)       
+		if(is_n_on || is_l_on || is_s_on)       
         		printf("total %d", total); 
 		if(fts_close(ftsp) == -1)
 			perror("fts_close");
@@ -190,17 +208,27 @@ int main
 			perror("getcwd");
 		else {
                 	pp[0] = cwd;
-			ftsp = fts_open(pp, 0, &compare);
+			
+			if(is_r_on) {
+				ftsp = fts_open(pp, 0, &rev_name_compare);
 
-			if(is_r_on)
-				ftsp = fts_open(pp, 0, &rev_compare);
-                	if(is_S_on)
-				ftsp = fts_open(pp, 0, &size_compare);
-			if(is_t_on)
-				ftsp = fts_open(pp, 0, &mtime_compare);
-			if(is_u_on)
-				ftsp = fts_open(pp, 0, &atime_compare);
-                	
+				if(is_S_on)
+					ftsp = fts_open(pp, 0, &rev_size_compare);
+				if(is_t_on)
+					ftsp = fts_open(pp, 0, &rev_mtime_compare);
+				if(is_u_on)
+					ftsp = fts_open(pp, 0, &rev_atime_compare);
+			} else {
+				ftsp = fts_open(pp, 0, &name_compare);
+
+                		if(is_S_on)
+					ftsp = fts_open(pp, 0, &size_compare);
+				if(is_t_on)
+					ftsp = fts_open(pp, 0, &mtime_compare);
+				if(is_u_on)
+					ftsp = fts_open(pp, 0, &atime_compare);
+        		}    
+    	
 			if(ftsp == NULL) {
                         	perror("fts_open");
                         	exit(1);
@@ -246,6 +274,8 @@ int main
 				} else if (ent->fts_info == FTS_SL) {
 				} else if (ent->fts_info == FTS_SLNONE) {
 				} else if (ent->fts_info == FTS_W) {
+				} else {
+					print = 0;
 				}
 				
 				if(ent->fts_level == 1 && print) {
@@ -262,9 +292,9 @@ int main
 						printf("%ld\t%s\t",
 							ent->fts_statp->st_size, buffer);
 					if(is_i_on)
-						printf("%d ", ent->fts_statp->st_ino);
+						printf("%lu ", ent->fts_statp->st_ino);
 					if(is_s_on)
-						printf("%d ", ent->fts_statp->st_blocks);
+						printf("%ld ", ent->fts_statp->st_blocks);
 					if(is_n_on || is_l_on || is_s_on)
 						total += ent->fts_statp->st_blocks;
 					
@@ -339,16 +369,12 @@ fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char) {
  *
  */
 int 
-compare(const FTSENT ** first, const FTSENT ** second) {
+name_compare(const FTSENT ** first, const FTSENT ** second) {
 	return (strcmp((*first)->fts_name, (*second)->fts_name));
 }
 
-
-/*
- *
- */
-int 
-rev_compare(const FTSENT ** first, const FTSENT ** second) {
+int
+rev_name_compare(const FTSENT ** first, const FTSENT ** second) {
 	return (strcmp((*second)->fts_name, (*first)->fts_name));
 }
 
@@ -363,6 +389,14 @@ size_compare(const FTSENT ** first, const FTSENT ** second) {
 		return 1;
 }
 
+int
+rev_size_compare(const FTSENT ** first, const FTSENT ** second) {
+	if ((*first)->fts_statp->st_size >= (*second)->fts_statp->st_size)
+		return 1;
+	else
+		return -1;
+}
+
 /*
  *
  */
@@ -374,6 +408,14 @@ mtime_compare(const FTSENT ** first, const FTSENT ** second) {
 		return 1;
 }
 
+int
+rev_mtime_compare(const FTSENT ** first, const FTSENT ** second) {
+	if ((*first)->fts_statp->st_mtime >= (*second)->fts_statp->st_mtime)
+		return 1;
+	else
+		return -1;
+}
+
 /*
  *
  */
@@ -383,4 +425,12 @@ atime_compare(const FTSENT ** first, const FTSENT ** second) {
 		return -1;
 	else
 		return 1; 
+}
+
+int
+rev_atime_compare(const FTSENT ** first, const FTSENT ** second) {
+	if ((*first)->fts_statp->st_atime >= (*second)->fts_statp->st_atime)
+		return 1;
+	else
+		return -1;
 } 
