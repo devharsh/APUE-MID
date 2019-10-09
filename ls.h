@@ -25,7 +25,16 @@ void
 fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char);
 
 int 
-compare(const FTSENT ** first, const FTSENT ** second);
+compare       (const FTSENT ** first, const FTSENT ** second);
 
 int
-rev_compare(const FTSENT ** first, const FTSENT ** second);
+rev_compare   (const FTSENT ** first, const FTSENT ** second);
+
+int
+size_compare  (const FTSENT ** first, const FTSENT ** second);
+
+int 
+mtime_compare (const FTSENT ** first, const FTSENT ** second);
+
+int
+atime_compare (const FTSENT ** first, const FTSENT ** second);

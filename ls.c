@@ -2,12 +2,12 @@
 
 
 /*
-* This program simulates the behaviour of a standard ls
-* command on a UNIX like system. It takes the directory
-* path as a argument, if it is not provided it takes
-* present working directory as default. It can be used
-* with some switch arguments as provided.
-*/  
+ * This program simulates the behaviour of a standard ls
+ * command on a UNIX like system. It takes the directory
+ * path as a argument, if it is not provided it takes
+ * present working directory as default. It can be used
+ * with some switch arguments as provided.
+ */  
 int main
 (int argc, char * argv[]) {  
 	
@@ -110,6 +110,13 @@ int main
         	}  
     	}  
 
+	/* switch overrides */
+	
+	if(is_n_on) {
+		if(is_l_on)
+			is_l_on = 0;
+	}
+
 	pp[1] = NULL;
 
 	for(; optind < argc; optind++) {      
@@ -119,6 +126,8 @@ int main
 
 		if(is_r_on)
 			ftsp = fts_open(pp, 0, &rev_compare);
+		else if(is_S_on)
+			ftsp = fts_open(pp, 0, &size_compare);
 		else
         		ftsp = fts_open(pp, 0, &compare);
         	
@@ -181,11 +190,16 @@ int main
 			perror("getcwd");
 		else {
                 	pp[0] = cwd;
+			ftsp = fts_open(pp, 0, &compare);
 
 			if(is_r_on)
 				ftsp = fts_open(pp, 0, &rev_compare);
-                	else
-				ftsp = fts_open(pp, 0, &compare);
+                	if(is_S_on)
+				ftsp = fts_open(pp, 0, &size_compare);
+			if(is_t_on)
+				ftsp = fts_open(pp, 0, &mtime_compare);
+			if(is_u_on)
+				ftsp = fts_open(pp, 0, &atime_compare);
                 	
 			if(ftsp == NULL) {
                         	perror("fts_open");
@@ -233,21 +247,32 @@ int main
 				} else if (ent->fts_info == FTS_SLNONE) {
 				} else if (ent->fts_info == FTS_W) {
 				}
-
+				
 				if(ent->fts_level == 1 && print) {
-                                	if(is_l_on)
-                                        	printf("%s\t%d\t%s\t%s\t%ld\t%s\t",
-                                                	modeval, ent->fts_statp->st_nlink,
-                                                	pwd->pw_name, grp->gr_name, 
-                                                	ent->fts_statp->st_size, buffer);
-                                	if(is_s_on)
+                                	if(is_n_on || is_l_on)
+                                        	printf("%s\t%d\t",
+                                                	modeval, ent->fts_statp->st_nlink);
+                                	if(is_n_on)
+						printf("%d\t%d\t",
+							pwd->pw_uid, grp->gr_gid);
+					if(is_l_on)
+						printf("%s\t%s\t",
+							pwd->pw_name, grp->gr_name);
+					if(is_n_on || is_l_on)
+						printf("%ld\t%s\t",
+							ent->fts_statp->st_size, buffer);
+					if(is_i_on)
+						printf("%d ", ent->fts_statp->st_ino);
+					if(is_s_on)
 						printf("%d ", ent->fts_statp->st_blocks);
-					if(is_l_on || is_s_on)
+					if(is_n_on || is_l_on || is_s_on)
 						total += ent->fts_statp->st_blocks;
+					
 					printf("%s", ent->fts_name);
+					
 					if(is_F_on) 
 						printf("%c", F_char);
-                                	if(is_l_on)
+                                	if(is_n_on || is_l_on)
                                         	printf("\n");
                                 	else
                                         	printf("\t");
@@ -256,7 +281,7 @@ int main
         		
 			if(is_s_on)
 				printf("\n");        
-                	if(is_l_on || is_s_on)       
+                	if(is_n_on || is_l_on || is_s_on)       
                         	printf("total %d", total); 
                 	if(fts_close(ftsp) == -1)
                         	perror("fts_close");
@@ -277,18 +302,22 @@ fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char) {
         
 	if(S_ISREG(perm))
                 *F_char = 0;
-        if(S_ISDIR(perm))
+        else if(S_ISDIR(perm))
                 *F_char = '/';
-        if(S_ISCHR(perm))
-        if(S_ISBLK(perm))
-        if(S_ISFIFO(perm))
+        else if(S_ISCHR(perm))
+		*F_char = 0;
+        else if(S_ISBLK(perm))
+		*F_char = 0;
+        else if(S_ISFIFO(perm))
                 *F_char = '|';
-        if(S_ISLNK(perm))
+        else if(S_ISLNK(perm))
                 *F_char = '@';
-        if(S_ISSOCK(perm))
+        else if(S_ISSOCK(perm))
                 *F_char = '=';
-        if(S_ISWHT(perm))
+        else if(S_ISWHT(perm))
                 *F_char = '%';
+	else
+		*F_char = 0;
         
 	modeval[0] = (perm & S_IFDIR) ? 'd' : '-';
         modeval[1] = (perm & S_IRUSR) ? 'r' : '-';
@@ -307,16 +336,51 @@ fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char) {
 }
 
 /*
-*
-*/
-int compare(const FTSENT ** first, const FTSENT ** second) {
+ *
+ */
+int 
+compare(const FTSENT ** first, const FTSENT ** second) {
 	return (strcmp((*first)->fts_name, (*second)->fts_name));
 }
 
 
 /*
-*
-*/
-int rev_compare(const FTSENT ** first, const FTSENT ** second) {
+ *
+ */
+int 
+rev_compare(const FTSENT ** first, const FTSENT ** second) {
 	return (strcmp((*second)->fts_name, (*first)->fts_name));
+}
+
+/*
+ *
+ */
+int
+size_compare(const FTSENT ** first, const FTSENT ** second) {
+	if ((*first)->fts_statp->st_size >= (*second)->fts_statp->st_size)
+		return -1;
+	else
+		return 1;
+}
+
+/*
+ *
+ */
+int
+mtime_compare(const FTSENT ** first, const FTSENT ** second) {
+	if ((*first)->fts_statp->st_mtime >= (*second)->fts_statp->st_mtime)
+		return -1;
+	else
+		return 1;
+}
+
+/*
+ *
+ */
+int
+atime_compare(const FTSENT ** first, const FTSENT ** second) {
+	if ((*first)->fts_statp->st_atime >= (*second)->fts_statp->st_atime)
+		return -1;
+	else
+		return 1; 
 } 
