@@ -134,10 +134,7 @@ int main
                         pwd = getpwuid(ent->fts_statp->st_uid);
 			
 			if (ent->fts_info == FTS_D) {
-				if(is_A_on)
-					print = 1;
-				else
-					print = 0;
+				print = 1;
 			} else if (ent->fts_info == FTS_DC) {
 				print = 0;
 			} else if (ent->fts_info == FTS_DEFAULT) {
@@ -252,10 +249,7 @@ int main
                                 pwd = getpwuid(ent->fts_statp->st_uid);
 
 				if (ent->fts_info == FTS_D) {
-					if(is_A_on)
-						print = 1;
-					else
-						print = 0;
+					print = 1;
 				} else if (ent->fts_info == FTS_DC) {
 					print = 0;
 				} else if (ent->fts_info == FTS_DEFAULT) {
@@ -323,9 +317,6 @@ int main
 	return 0; 
 }
 
-/*
- *
- */
 void
 fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char) {
         mode_t perm = ent->fts_statp->st_mode;
@@ -365,72 +356,3 @@ fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char) {
         strftime(buffer, 80, "%b %d %H:%M", time_c);
 }
 
-/*
- *
- */
-int 
-name_compare(const FTSENT ** first, const FTSENT ** second) {
-	return (strcmp((*first)->fts_name, (*second)->fts_name));
-}
-
-int
-rev_name_compare(const FTSENT ** first, const FTSENT ** second) {
-	return (strcmp((*second)->fts_name, (*first)->fts_name));
-}
-
-/*
- *
- */
-int
-size_compare(const FTSENT ** first, const FTSENT ** second) {
-	if ((*first)->fts_statp->st_size >= (*second)->fts_statp->st_size)
-		return -1;
-	else
-		return 1;
-}
-
-int
-rev_size_compare(const FTSENT ** first, const FTSENT ** second) {
-	if ((*first)->fts_statp->st_size >= (*second)->fts_statp->st_size)
-		return 1;
-	else
-		return -1;
-}
-
-/*
- *
- */
-int
-mtime_compare(const FTSENT ** first, const FTSENT ** second) {
-	if ((*first)->fts_statp->st_mtime >= (*second)->fts_statp->st_mtime)
-		return -1;
-	else
-		return 1;
-}
-
-int
-rev_mtime_compare(const FTSENT ** first, const FTSENT ** second) {
-	if ((*first)->fts_statp->st_mtime >= (*second)->fts_statp->st_mtime)
-		return 1;
-	else
-		return -1;
-}
-
-/*
- *
- */
-int
-atime_compare(const FTSENT ** first, const FTSENT ** second) {
-	if ((*first)->fts_statp->st_atime >= (*second)->fts_statp->st_atime)
-		return -1;
-	else
-		return 1; 
-}
-
-int
-rev_atime_compare(const FTSENT ** first, const FTSENT ** second) {
-	if ((*first)->fts_statp->st_atime >= (*second)->fts_statp->st_atime)
-		return 1;
-	else
-		return -1;
-} 

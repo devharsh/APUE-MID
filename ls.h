@@ -2,7 +2,7 @@
  * MID - ls - list the contents of a directory
  * Author: Devharsh Trivedi
  * Email: dtrived5@stevens.edu
-*/
+ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -18,6 +18,8 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "cmp.h"
 
 #define PATH_LIM 4096
 
@@ -55,29 +57,9 @@ struct passwd* pwd;
 
 FTS *ftsp;
 
+/*
+ *
+ */
 void
 fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char);
 
-int
-name_compare      (const FTSENT ** first, const FTSENT ** second);
-
-int
-rev_name_compare  (const FTSENT ** first, const FTSENT ** second);
-
-int
-size_compare      (const FTSENT ** first, const FTSENT ** second);
-
-int
-rev_size_compare  (const FTSENT ** first, const FTSENT ** second);
-
-int 
-mtime_compare     (const FTSENT ** first, const FTSENT ** second);
-
-int
-rev_mtime_compare (const FTSENT ** first, const FTSENT ** second);
-
-int
-atime_compare     (const FTSENT ** first, const FTSENT ** second);
-
-int
-rev_atime_compare (const FTSENT ** first, const FTSENT ** second);
