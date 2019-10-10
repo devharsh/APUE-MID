@@ -94,20 +94,26 @@ int main
                 	ftsp = fts_open(pp, fts_options, &rev_name_compare);
 
                 	if(is_S_on)
-                		ftsp = fts_open(pp, fts_options, &rev_size_compare);
+                		ftsp = fts_open(pp, fts_options, 
+						&rev_size_compare);
                 	if(is_t_on)
-                		ftsp = fts_open(pp, fts_options, &rev_mtime_compare);
+                		ftsp = fts_open(pp, fts_options, 
+						&rev_mtime_compare);
                 	if(is_u_on)
-                		ftsp = fts_open(pp, fts_options, &rev_atime_compare);
+                		ftsp = fts_open(pp, fts_options, 
+						&rev_atime_compare);
                 } else {
                 	ftsp = fts_open(pp, fts_options, &name_compare);
 
                 	if(is_S_on)
-                		ftsp = fts_open(pp, fts_options, &size_compare);
+                		ftsp = fts_open(pp, fts_options, 
+						&size_compare);
                 	if(is_t_on)
-                		ftsp = fts_open(pp, fts_options, &mtime_compare);
+                		ftsp = fts_open(pp, fts_options, 
+						&mtime_compare);
                 	if(is_u_on)
-                		ftsp = fts_open(pp, fts_options, &atime_compare);
+                		ftsp = fts_open(pp, fts_options, 
+						&atime_compare);
                 }	
 
 		if(ftsp == NULL) {
@@ -170,10 +176,12 @@ int main
 				if(is_i_on)
                                 	printf("%lu ", ent->fts_statp->st_ino);
                                 if(is_s_on)
-                                	printf("%ld ", ent->fts_statp->st_blocks);
+                                	printf("%ld ", 
+						ent->fts_statp->st_blocks);
                         	if(is_n_on || is_l_on)
                         		printf("%s\t%d\t",
-                        			modeval, ent->fts_statp->st_nlink);
+                        			modeval, 
+						ent->fts_statp->st_nlink);
                         	if(is_n_on)
 					printf("%d\t%d\t",
 						pwd->pw_uid, grp->gr_gid);
@@ -182,7 +190,8 @@ int main
 						pwd->pw_name, grp->gr_name);
 				if(is_n_on || is_l_on)
 					printf("%ld\t%s\t",
-						ent->fts_statp->st_size, buffer);
+						ent->fts_statp->st_size, 
+						buffer);
 				if(is_n_on || is_l_on || is_s_on)
 					total += ent->fts_statp->st_blocks;
 					
@@ -217,23 +226,30 @@ int main
 				fts_options |= FTS_SEEDOT;			
 		
 			if(is_r_on) {
-				ftsp = fts_open(pp, fts_options, &rev_name_compare);
+				ftsp = fts_open(pp, fts_options, 
+						&rev_name_compare);
 
 				if(is_S_on)
-					ftsp = fts_open(pp, fts_options, &rev_size_compare);
+					ftsp = fts_open(pp, fts_options, 
+							&rev_size_compare);
 				if(is_t_on)
-					ftsp = fts_open(pp, fts_options, &rev_mtime_compare);
+					ftsp = fts_open(pp, fts_options, 
+							&rev_mtime_compare);
 				if(is_u_on)
-					ftsp = fts_open(pp, fts_options, &rev_atime_compare);
+					ftsp = fts_open(pp, fts_options, 
+							&rev_atime_compare);
 			} else {
 				ftsp = fts_open(pp, fts_options, &name_compare);
 
                 		if(is_S_on)
-					ftsp = fts_open(pp, fts_options, &size_compare);
+					ftsp = fts_open(pp, fts_options, 
+							&size_compare);
 				if(is_t_on)
-					ftsp = fts_open(pp, fts_options, &mtime_compare);
+					ftsp = fts_open(pp, fts_options, 
+							&mtime_compare);
 				if(is_u_on)
-					ftsp = fts_open(pp, fts_options, &atime_compare);
+					ftsp = fts_open(pp, fts_options, 
+							&atime_compare);
         		}    
     	
 			if(ftsp == NULL) {
@@ -294,23 +310,33 @@ int main
 
 				if(ent->fts_level == 1 && print && print_name) {
                                 	if(is_i_on)
-                                                printf("%lu ", ent->fts_statp->st_ino);
+                                                printf("%lu ", 
+							ent->fts_statp->st_ino);
                                         if(is_s_on)
-                                                printf("%ld ", ent->fts_statp->st_blocks);
+                                                printf("%ld ", 
+							ent->fts_statp->
+							st_blocks);
 					if(is_n_on || is_l_on)
                                         	printf("%s\t%d\t",
-                                                	modeval, ent->fts_statp->st_nlink);
+                                                	modeval, 
+							ent->fts_statp->
+							st_nlink);
                                 	if(is_n_on)
 						printf("%d\t%d\t",
-							pwd->pw_uid, grp->gr_gid);
+							pwd->pw_uid, 
+							grp->gr_gid);
 					if(is_l_on)
 						printf("%s\t%s\t",
-							pwd->pw_name, grp->gr_name);
+							pwd->pw_name, 
+							grp->gr_name);
 					if(is_n_on || is_l_on)
 						printf("%ld\t%s\t",
-							ent->fts_statp->st_size, buffer);
+							ent->fts_statp->
+							st_size,
+							buffer); 
 					if(is_n_on || is_l_on || is_s_on)
-						total += ent->fts_statp->st_blocks;
+						total += 
+						ent->fts_statp->st_blocks;
 				
 					printf("%s", ent->fts_name);
 
