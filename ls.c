@@ -20,6 +20,7 @@ int main
 				break;
 			case 'a':
 				is_a_on = 1;
+				is_A_on = 1;	
 				break;
 			case 'c':
 				is_c_on = 1;
@@ -206,24 +207,27 @@ int main
 		else {
                 	pp[0] = cwd;
 			
+			if(is_a_on)
+				fts_options |= FTS_SEEDOT;			
+		
 			if(is_r_on) {
-				ftsp = fts_open(pp, 0, &rev_name_compare);
+				ftsp = fts_open(pp, fts_options, &rev_name_compare);
 
 				if(is_S_on)
-					ftsp = fts_open(pp, 0, &rev_size_compare);
+					ftsp = fts_open(pp, fts_options, &rev_size_compare);
 				if(is_t_on)
-					ftsp = fts_open(pp, 0, &rev_mtime_compare);
+					ftsp = fts_open(pp, fts_options, &rev_mtime_compare);
 				if(is_u_on)
-					ftsp = fts_open(pp, 0, &rev_atime_compare);
+					ftsp = fts_open(pp, fts_options, &rev_atime_compare);
 			} else {
-				ftsp = fts_open(pp, 0, &name_compare);
+				ftsp = fts_open(pp, fts_options, &name_compare);
 
                 		if(is_S_on)
-					ftsp = fts_open(pp, 0, &size_compare);
+					ftsp = fts_open(pp, fts_options, &size_compare);
 				if(is_t_on)
-					ftsp = fts_open(pp, 0, &mtime_compare);
+					ftsp = fts_open(pp, fts_options, &mtime_compare);
 				if(is_u_on)
-					ftsp = fts_open(pp, 0, &atime_compare);
+					ftsp = fts_open(pp, fts_options, &atime_compare);
         		}    
     	
 			if(ftsp == NULL) {
@@ -248,6 +252,14 @@ int main
 				grp = getgrgid(ent->fts_statp->st_gid);
                                 pwd = getpwuid(ent->fts_statp->st_uid);
 
+				if (ent->fts_name[0] == '.') {
+                                        if(is_A_on)
+                                                print_name = 1;
+					else
+						print_name = 0;
+                                } else
+                                        print_name = 1;
+
 				if (ent->fts_info == FTS_D) {
 					print = 1;
 				} else if (ent->fts_info == FTS_DC) {
@@ -255,7 +267,10 @@ int main
 				} else if (ent->fts_info == FTS_DEFAULT) {
 				} else if (ent->fts_info == FTS_DNR) {
 				} else if (ent->fts_info == FTS_DOT) {
-					print = 1;
+					if(is_a_on)
+						print = 1;
+					else
+						print = 0;
 				} else if (ent->fts_info == FTS_DP) {
 					print = 0;
 				} else if (ent->fts_info == FTS_ERR) {
@@ -268,12 +283,15 @@ int main
 				} else if (ent->fts_info == FTS_SL) {
 				} else if (ent->fts_info == FTS_SLNONE) {
 				} else if (ent->fts_info == FTS_W) {
-				} else {
+				} else
 					print = 0;
-				}
-				
-				if(ent->fts_level == 1 && print) {
-                                	if(is_n_on || is_l_on)
+
+				if(ent->fts_level == 1 && print && print_name) {
+                                	if(is_i_on)
+                                                printf("%lu ", ent->fts_statp->st_ino);
+                                        if(is_s_on)
+                                                printf("%ld ", ent->fts_statp->st_blocks);
+					if(is_n_on || is_l_on)
                                         	printf("%s\t%d\t",
                                                 	modeval, ent->fts_statp->st_nlink);
                                 	if(is_n_on)
@@ -285,32 +303,26 @@ int main
 					if(is_n_on || is_l_on)
 						printf("%ld\t%s\t",
 							ent->fts_statp->st_size, buffer);
-					if(is_i_on)
-						printf("%lu ", ent->fts_statp->st_ino);
-					if(is_s_on)
-						printf("%ld ", ent->fts_statp->st_blocks);
 					if(is_n_on || is_l_on || is_s_on)
 						total += ent->fts_statp->st_blocks;
-					
+				
 					printf("%s", ent->fts_name);
-					
+
 					if(is_F_on) 
 						printf("%c", F_char);
-                                	if(is_n_on || is_l_on)
+                                	if(is_n_on || is_l_on || is_s_on)
                                         	printf("\n");
                                 	else
                                         	printf("\t");
                         	}                                        
                 	}      
-        		
-			if(is_s_on)
-				printf("\n");        
+        	
                 	if(is_n_on || is_l_on || is_s_on)       
-                        	printf("total %d", total); 
+                       		printf("total %d", total); 
                 	if(fts_close(ftsp) == -1)
-                        	perror("fts_close");
+                       		perror("fts_close");
 
-                	printf("\n");
+			printf("\n");
 		}
 	}
 

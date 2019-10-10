@@ -26,6 +26,7 @@
 int opt = 0; 
 int fhit = 0;
 int print = 0;
+int print_name = 0;
 int total = 0;
 
 int is_A_on = 0;
@@ -47,6 +48,8 @@ int is_s_on = 0;
 int is_t_on = 0;
 int is_u_on = 0;
 int is_w_on = 0;
+
+int fts_options = FTS_COMFOLLOW | FTS_NOCHDIR | FTS_PHYSICAL;
 
 char F_char;
 char buffer[80];
