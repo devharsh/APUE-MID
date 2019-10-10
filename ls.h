@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "cmp.h"
+#include "helper.h"
 
 #define PATH_LIM 4096
 
@@ -52,6 +53,7 @@ int is_w_on = 0;
 int fts_options = FTS_COMFOLLOW | FTS_NOCHDIR | FTS_PHYSICAL;
 
 char F_char;
+char modeval[12];
 char buffer[80];
 char *pp[2];
 
@@ -59,10 +61,3 @@ struct group* grp;
 struct passwd* pwd;
 
 FTS *ftsp;
-
-/*
- *
- */
-void
-fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char);
-

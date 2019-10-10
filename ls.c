@@ -10,9 +10,6 @@
  */  
 int main
 (int argc, char * argv[]) {  
-	
-	char *modeval = malloc(11);
-
 	while((opt = getopt(argc, argv,"AacdFfhiklnqRrSstuw")) != -1) {  
         	switch(opt) {
 			case 'A':
@@ -48,6 +45,7 @@ int main
 				break;
 			case 'n':
 				is_n_on = 1;
+				is_l_on = 0;
 				break;
 			case 'q':
 				is_q_on = 1;
@@ -79,11 +77,8 @@ int main
     	}  
 
 	/* switch overrides */
-	
-	if(is_n_on) {
-		if(is_l_on)
-			is_l_on = 0;
-	}
+	if(is_n_on)
+		is_l_on = 0;
 
 	pp[1] = NULL;
 
@@ -91,25 +86,28 @@ int main
 		fhit = 1;
 
         	pp[0] = argv[optind];
+	
+		if(is_a_on)
+			fts_options |= FTS_SEEDOT;
 
 		if(is_r_on) {
-                	ftsp = fts_open(pp, 0, &rev_name_compare);
+                	ftsp = fts_open(pp, fts_options, &rev_name_compare);
 
                 	if(is_S_on)
-                		ftsp = fts_open(pp, 0, &rev_size_compare);
+                		ftsp = fts_open(pp, fts_options, &rev_size_compare);
                 	if(is_t_on)
-                		ftsp = fts_open(pp, 0, &rev_mtime_compare);
+                		ftsp = fts_open(pp, fts_options, &rev_mtime_compare);
                 	if(is_u_on)
-                		ftsp = fts_open(pp, 0, &rev_atime_compare);
+                		ftsp = fts_open(pp, fts_options, &rev_atime_compare);
                 } else {
-                	ftsp = fts_open(pp, 0, &name_compare);
+                	ftsp = fts_open(pp, fts_options, &name_compare);
 
                 	if(is_S_on)
-                		ftsp = fts_open(pp, 0, &size_compare);
+                		ftsp = fts_open(pp, fts_options, &size_compare);
                 	if(is_t_on)
-                		ftsp = fts_open(pp, 0, &mtime_compare);
+                		ftsp = fts_open(pp, fts_options, &mtime_compare);
                 	if(is_u_on)
-                		ftsp = fts_open(pp, 0, &atime_compare);
+                		ftsp = fts_open(pp, fts_options, &atime_compare);
                 }	
 
 		if(ftsp == NULL) {
@@ -133,7 +131,15 @@ int main
 
                         grp = getgrgid(ent->fts_statp->st_gid);
                         pwd = getpwuid(ent->fts_statp->st_uid);
-			
+	
+			if (ent->fts_name[0] == '.') {
+                        	if(is_A_on)
+                        		print_name = 1;
+                        	else
+                        		print_name = 0;
+                        } else
+                        	print_name = 1;
+		
 			if (ent->fts_info == FTS_D) {
 				print = 1;
 			} else if (ent->fts_info == FTS_DC) {
@@ -141,7 +147,10 @@ int main
 			} else if (ent->fts_info == FTS_DEFAULT) {
 			} else if (ent->fts_info == FTS_DNR) {
 			} else if (ent->fts_info == FTS_DOT) {
-				print = 1;
+				if(is_a_on)
+					print = 1;
+				else
+					print = 0;
 			} else if (ent->fts_info == FTS_DP) {
 				print = 0;
 			} else if (ent->fts_info == FTS_ERR) {
@@ -154,11 +163,14 @@ int main
 			} else if (ent->fts_info == FTS_SL) {
 			} else if (ent->fts_info == FTS_SLNONE) {
 			} else if (ent->fts_info == FTS_W) {
-			} else {
+			} else
 				print = 0;
-			}
 		
-			if(ent->fts_level == 1 && print) {
+			if(ent->fts_level == 1 && print && print_name) {
+				if(is_i_on)
+                                	printf("%lu ", ent->fts_statp->st_ino);
+                                if(is_s_on)
+                                	printf("%ld ", ent->fts_statp->st_blocks);
                         	if(is_n_on || is_l_on)
                         		printf("%s\t%d\t",
                         			modeval, ent->fts_statp->st_nlink);
@@ -171,10 +183,6 @@ int main
 				if(is_n_on || is_l_on)
 					printf("%ld\t%s\t",
 						ent->fts_statp->st_size, buffer);
-				if(is_i_on)
-					printf("%lu ", ent->fts_statp->st_ino);
-				if(is_s_on)
-					printf("%ld ", ent->fts_statp->st_blocks);
 				if(is_n_on || is_l_on || is_s_on)
 					total += ent->fts_statp->st_blocks;
 					
@@ -182,15 +190,13 @@ int main
 				
 				if(is_F_on) 
 					printf("%c", F_char);
-                        	if(is_n_on || is_l_on)
+                        	if(is_n_on || is_l_on || is_s_on)
                         		printf("\n");
                         	else
                         		printf("\t");
                        	}	
         	}      
 
-		if(is_s_on)
-			printf("\n");	
 		if(is_n_on || is_l_on || is_s_on)       
         		printf("total %d", total); 
 		if(fts_close(ftsp) == -1)
@@ -327,44 +333,5 @@ int main
 	}
 
 	return 0; 
-}
-
-void
-fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char) {
-        mode_t perm = ent->fts_statp->st_mode;
-        
-	if(S_ISREG(perm))
-                *F_char = 0;
-        else if(S_ISDIR(perm))
-                *F_char = '/';
-        else if(S_ISCHR(perm))
-		*F_char = 0;
-        else if(S_ISBLK(perm))
-		*F_char = 0;
-        else if(S_ISFIFO(perm))
-                *F_char = '|';
-        else if(S_ISLNK(perm))
-                *F_char = '@';
-        else if(S_ISSOCK(perm))
-                *F_char = '=';
-        else if(S_ISWHT(perm))
-                *F_char = '%';
-	else
-		*F_char = 0;
-        
-	modeval[0] = (perm & S_IFDIR) ? 'd' : '-';
-        modeval[1] = (perm & S_IRUSR) ? 'r' : '-';
-        modeval[2] = (perm & S_IWUSR) ? 'w' : '-';
-        modeval[3] = (perm & S_IXUSR) ? 'x' : '-';
-        modeval[4] = (perm & S_IRGRP) ? 'r' : '-';
-        modeval[5] = (perm & S_IWGRP) ? 'w' : '-';
-        modeval[6] = (perm & S_IXGRP) ? 'x' : '-';
-        modeval[7] = (perm & S_IROTH) ? 'r' : '-';
-        modeval[8] = (perm & S_IWOTH) ? 'w' : '-';
-        modeval[9] = (perm & S_IXOTH) ? 'x' : '-';
-        modeval[10] = '\0';
-
-        struct tm* time_c = localtime(&ent->fts_statp->st_ctime);
-        strftime(buffer, 80, "%b %d %H:%M", time_c);
 }
 
