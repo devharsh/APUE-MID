@@ -80,47 +80,13 @@ int main
 	if(is_n_on)
 		is_l_on = 0;
 
-	pp[1] = NULL;
-
 	for(; optind < argc; optind++) {      
 		fhit = 1;
 
-        	pp[0] = argv[optind];
+		FTS_Open(&ftsp, fts_options, argv[optind],
+        		 is_a_on, is_r_on, is_S_on,
+        		 is_t_on, is_u_on);
 	
-		if(is_a_on)
-			fts_options |= FTS_SEEDOT;
-
-		if(is_r_on) {
-                	ftsp = fts_open(pp, fts_options, &rev_name_compare);
-
-                	if(is_S_on)
-                		ftsp = fts_open(pp, fts_options, 
-						&rev_size_compare);
-                	if(is_t_on)
-                		ftsp = fts_open(pp, fts_options, 
-						&rev_mtime_compare);
-                	if(is_u_on)
-                		ftsp = fts_open(pp, fts_options, 
-						&rev_atime_compare);
-                } else {
-                	ftsp = fts_open(pp, fts_options, &name_compare);
-
-                	if(is_S_on)
-                		ftsp = fts_open(pp, fts_options, 
-						&size_compare);
-                	if(is_t_on)
-                		ftsp = fts_open(pp, fts_options, 
-						&mtime_compare);
-                	if(is_u_on)
-                		ftsp = fts_open(pp, fts_options, 
-						&atime_compare);
-                }	
-
-		if(ftsp == NULL) {
-                	perror("fts_open");
-                	exit(1);
-        	}
-
         	while(1) {
 			FTSENT *ent = fts_read(ftsp);
 
@@ -138,46 +104,27 @@ int main
                         grp = getgrgid(ent->fts_statp->st_gid);
                         pwd = getpwuid(ent->fts_statp->st_uid);
 	
-			if (ent->fts_name[0] == '.') {
-                        	if(is_A_on)
-                        		print_name = 1;
-                        	else
-                        		print_name = 0;
-                        } else
-                        	print_name = 1;
-		
-			if (ent->fts_info == FTS_D) {
-				print = 1;
-			} else if (ent->fts_info == FTS_DC) {
-				print = 0;
-			} else if (ent->fts_info == FTS_DEFAULT) {
-			} else if (ent->fts_info == FTS_DNR) {
-			} else if (ent->fts_info == FTS_DOT) {
-				if(is_a_on)
-					print = 1;
-				else
-					print = 0;
-			} else if (ent->fts_info == FTS_DP) {
-				print = 0;
-			} else if (ent->fts_info == FTS_ERR) {
-				print = 0;
-			} else if (ent->fts_info == FTS_F) {
-				print = 1;
-			} else if (ent->fts_info == FTS_INIT ) {
-			} else if (ent->fts_info == FTS_NS) {
-			} else if (ent->fts_info == FTS_NSOK) {
-			} else if (ent->fts_info == FTS_SL) {
-			} else if (ent->fts_info == FTS_SLNONE) {
-			} else if (ent->fts_info == FTS_W) {
-			} else
-				print = 0;
-		
+			is_print(ent, &print, &print_name, is_a_on, is_A_on);
+	
 			if(ent->fts_level == 1 && print && print_name) {
 				if(is_i_on)
                                 	printf("%lu ", ent->fts_statp->st_ino);
-                                if(is_s_on)
-                                	printf("%ld ", 
-						ent->fts_statp->st_blocks);
+                                
+				if(is_s_on) {
+					if(is_h_on && (is_n_on || is_l_on)) {
+                                		size_read(ent->
+                                			fts_statp->
+                                			st_blocks * 512,
+                                			size_name);
+
+                                		printf("%s ",
+                                			size_name);
+                                	} else
+                                		printf("%ld ",
+                                			ent->fts_statp->
+                                			st_blocks);
+                                }
+
                         	if(is_n_on || is_l_on)
                         		printf("%s\t%d\t",
                         			modeval, 
@@ -188,13 +135,32 @@ int main
 				if(is_l_on)
 					printf("%s\t%s\t",
 						pwd->pw_name, grp->gr_name);
-				if(is_n_on || is_l_on)
-					printf("%ld\t%s\t",
-						ent->fts_statp->st_size, 
-						buffer);
-				if(is_n_on || is_l_on || is_s_on)
-					total += ent->fts_statp->st_blocks;
-					
+	
+				if(is_n_on || is_l_on) {
+					if(is_h_on) {
+                                        	size_read(ent-> 
+                                                	fts_statp->st_size,
+                                                	size_name);
+
+                                                printf("%s\t%s\t",
+                                                       size_name,
+                                                       buffer);
+                                        } else
+                                                printf("%ld\t%s\t",
+                                                      ent->fts_statp->
+                                                      st_size,
+                                                      buffer);
+				}
+
+				if(is_n_on || is_l_on || is_s_on) {
+					if(is_h_on)
+						total_size +=
+						ent->fts_statp->st_size;
+					else
+						total_blocks += 
+						ent->fts_statp->st_blocks;
+				}
+	
 				printf("%s", ent->fts_name);
 				
 				if(is_F_on) 
@@ -206,8 +172,14 @@ int main
                        	}	
         	}      
 
-		if(is_n_on || is_l_on || is_s_on)       
-        		printf("total %d", total); 
+		if(is_n_on || is_l_on || is_s_on) {       
+			if(is_h_on) {
+                        	size_read(total_size, size_name);
+                        	printf("total %s", size_name);
+                        } else       
+                		printf("total %d", total_blocks);
+                }	
+
 		if(fts_close(ftsp) == -1)
 			perror("fts_close");
 
@@ -220,45 +192,12 @@ int main
 		if(c == NULL)
 			perror("getcwd");
 		else {
-                	pp[0] = cwd;
-			
-			if(is_a_on)
-				fts_options |= FTS_SEEDOT;			
-		
-			if(is_r_on) {
-				ftsp = fts_open(pp, fts_options, 
-						&rev_name_compare);
-
-				if(is_S_on)
-					ftsp = fts_open(pp, fts_options, 
-							&rev_size_compare);
-				if(is_t_on)
-					ftsp = fts_open(pp, fts_options, 
-							&rev_mtime_compare);
-				if(is_u_on)
-					ftsp = fts_open(pp, fts_options, 
-							&rev_atime_compare);
-			} else {
-				ftsp = fts_open(pp, fts_options, &name_compare);
-
-                		if(is_S_on)
-					ftsp = fts_open(pp, fts_options, 
-							&size_compare);
-				if(is_t_on)
-					ftsp = fts_open(pp, fts_options, 
-							&mtime_compare);
-				if(is_u_on)
-					ftsp = fts_open(pp, fts_options, 
-							&atime_compare);
-        		}    
-    	
-			if(ftsp == NULL) {
-                        	perror("fts_open");
-                        	exit(1);
-                	}
+			FTS_Open(&ftsp, fts_options, cwd,
+        			 is_a_on, is_r_on, is_S_on,
+        			 is_t_on, is_u_on);
 
                 	while(1) {
-                       		FTSENT *ent = fts_read(ftsp);
+				FTSENT *ent = fts_read(ftsp);
                                 
 				if(ent == NULL) {
                                         if(errno == 0)
@@ -274,48 +213,28 @@ int main
 				grp = getgrgid(ent->fts_statp->st_gid);
                                 pwd = getpwuid(ent->fts_statp->st_uid);
 
-				if (ent->fts_name[0] == '.') {
-                                        if(is_A_on)
-                                                print_name = 1;
-					else
-						print_name = 0;
-                                } else
-                                        print_name = 1;
-
-				if (ent->fts_info == FTS_D) {
-					print = 1;
-				} else if (ent->fts_info == FTS_DC) {
-					print = 0;
-				} else if (ent->fts_info == FTS_DEFAULT) {
-				} else if (ent->fts_info == FTS_DNR) {
-				} else if (ent->fts_info == FTS_DOT) {
-					if(is_a_on)
-						print = 1;
-					else
-						print = 0;
-				} else if (ent->fts_info == FTS_DP) {
-					print = 0;
-				} else if (ent->fts_info == FTS_ERR) {
-					print = 0;
-				} else if (ent->fts_info == FTS_F) {
-					print = 1;
-				} else if (ent->fts_info == FTS_INIT ) {
-				} else if (ent->fts_info == FTS_NS) {
-				} else if (ent->fts_info == FTS_NSOK) {
-				} else if (ent->fts_info == FTS_SL) {
-				} else if (ent->fts_info == FTS_SLNONE) {
-				} else if (ent->fts_info == FTS_W) {
-				} else
-					print = 0;
+				is_print(ent, &print, &print_name, is_a_on, is_A_on);
 
 				if(ent->fts_level == 1 && print && print_name) {
                                 	if(is_i_on)
                                                 printf("%lu ", 
 							ent->fts_statp->st_ino);
-                                        if(is_s_on)
-                                                printf("%ld ", 
+                                        
+					if(is_s_on) {
+						if(is_h_on && (is_n_on || is_l_on)) {
+							size_read(ent->
+							fts_statp->
+							st_blocks * 512,
+							size_name);
+
+							printf("%s ",
+							size_name);
+                                                } else
+							printf("%ld ", 
 							ent->fts_statp->
 							st_blocks);
+					}
+
 					if(is_n_on || is_l_on)
                                         	printf("%s\t%d\t",
                                                 	modeval, 
@@ -329,15 +248,34 @@ int main
 						printf("%s\t%s\t",
 							pwd->pw_name, 
 							grp->gr_name);
-					if(is_n_on || is_l_on)
-						printf("%ld\t%s\t",
+					
+					if(is_n_on || is_l_on) {
+						if(is_h_on) {
+							size_read(ent->	
+							fts_statp->st_size,
+							size_name);
+
+							printf("%s\t%s\t",
+								size_name,
+								buffer);
+						} else
+							printf("%ld\t%s\t",
 							ent->fts_statp->
 							st_size,
-							buffer); 
-					if(is_n_on || is_l_on || is_s_on)
-						total += 
-						ent->fts_statp->st_blocks;
-				
+							buffer);
+					}
+ 
+					if(is_n_on || is_l_on || is_s_on) {
+						if(is_h_on)
+							total_size +=
+							ent->fts_statp->
+							st_size;
+						else
+							total_blocks += 
+							ent->fts_statp->
+							st_blocks;
+					}
+			
 					printf("%s", ent->fts_name);
 
 					if(is_F_on) 
@@ -349,8 +287,14 @@ int main
                         	}                                        
                 	}      
         	
-                	if(is_n_on || is_l_on || is_s_on)       
-                       		printf("total %d", total); 
+                	if(is_n_on || is_l_on || is_s_on) {
+				if(is_h_on) {
+					size_read(total_size, size_name);
+					printf("total %s", size_name);
+				} else       
+                       			printf("total %d", total_blocks);
+			}
+ 
                 	if(fts_close(ftsp) == -1)
                        		perror("fts_close");
 

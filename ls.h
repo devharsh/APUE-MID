@@ -4,22 +4,13 @@
  * Email: dtrived5@stevens.edu
  */
 
-#include <sys/stat.h>
 #include <sys/types.h>
 
 #include <ctype.h>
-#include <dirent.h>
 #include <errno.h>
-#include <fts.h>
 #include <grp.h>
 #include <pwd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
 
-#include "cmp.h"
 #include "helper.h"
 
 #define PATH_LIM 4096
@@ -28,7 +19,7 @@ int opt = 0;
 int fhit = 0;
 int print = 0;
 int print_name = 0;
-int total = 0;
+int total_blocks = 0;
 
 int is_A_on = 0;
 int is_a_on = 0;
@@ -52,10 +43,12 @@ int is_w_on = 0;
 
 int fts_options = FTS_COMFOLLOW | FTS_NOCHDIR | FTS_PHYSICAL;
 
+double total_size = 0;
+
 char F_char;
+char size_name[12];
 char modeval[12];
 char buffer[80];
-char *pp[2];
 
 struct group* grp;
 struct passwd* pwd;
