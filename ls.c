@@ -110,6 +110,11 @@ int main
 
 			fts_helper(ent, modeval, buffer, &F_char);
 
+			if(is_d_on) {
+                                if(strcmp(ent->fts_path, argv[optind]) != 0)
+                                        continue;
+                        }
+
 			if(is_exec(ent->fts_name) == 1)
 				F_char = '*';
 
@@ -117,8 +122,17 @@ int main
                         pwd = getpwuid(ent->fts_statp->st_uid);
 	
 			is_print(ent, &print, &print_name, is_a_on, is_A_on);
-	
-			if(ent->fts_level == 1 && print && print_name) {
+			
+			if(ent->fts_level == 0) {
+				if(!is_d_on)
+					continue;
+			}
+			if(ent->fts_level > 1) {
+				if(!is_R_on)
+					continue;
+			}
+
+			if(print && print_name) {
 				if(is_i_on)
                                 	printf("%lu ", ent->fts_statp->st_ino);
                                 
@@ -172,8 +186,11 @@ int main
 						total_blocks += 
 						ent->fts_statp->st_blocks;
 				}
-	
-				printf("%s", ent->fts_name);
+			
+				if(is_d_on)
+					printf("%s", ent->fts_path);
+				else	
+					printf("%s", ent->fts_name);
 				
 				if(is_F_on) 
 					printf("%c", F_char);
@@ -184,13 +201,15 @@ int main
                        	}	
         	}      
 
-		if(is_n_on || is_l_on || is_s_on) {       
-			if(is_h_on) {
-                        	size_read(total_size, size_name);
-                        	printf("total %s", size_name);
-                        } else       
-                		printf("total %d", total_blocks);
-                }	
+		if(!is_d_on) {
+			if(is_n_on || is_l_on || is_s_on) {       
+				if(is_h_on) {
+                        		size_read(total_size, size_name);
+                        		printf("total %s", size_name);
+                        	} else       
+                			printf("total %d", total_blocks);
+                	}
+		}	
 
 		if(fts_close(ftsp) == -1)
 			perror("fts_close");
