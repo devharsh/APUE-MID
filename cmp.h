@@ -27,3 +27,9 @@ atime_compare(const FTSENT ** first, const FTSENT ** second);
 
 int
 rev_atime_compare(const FTSENT ** first, const FTSENT ** second);
+
+int
+ctime_compare(const FTSENT ** first, const FTSENT ** second);
+
+int
+rev_ctime_compare(const FTSENT ** first, const FTSENT ** second);

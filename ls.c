@@ -94,7 +94,7 @@ int main
 
 		FTS_Open(&ftsp, fts_options, argv[optind],
         		 is_a_on, is_r_on, is_S_on,
-        		 is_t_on, is_u_on);
+        		 is_t_on, is_u_on, is_c_on);
 	
         	while(1) {
 			FTSENT *ent = fts_read(ftsp);
@@ -223,7 +223,7 @@ int main
 		cwd[1] = '\0';
 		FTS_Open(&ftsp, fts_options, cwd,
         		 is_a_on, is_r_on, is_S_on,
-        		 is_t_on, is_u_on);
+        		 is_t_on, is_u_on, is_c_on);
 
                	while(1) {
 			FTSENT *ent = fts_read(ftsp);

@@ -37,7 +37,7 @@ is_exec(char* name);
 void
 FTS_Open(FTS **ftsp, int fts_options, char *p,
         int is_a_on, int is_r_on, int is_S_on,
-        int is_t_on, int is_u_on);
+        int is_t_on, int is_u_on, int is_c_on);
 
 /*
  *

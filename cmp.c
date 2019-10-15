@@ -57,3 +57,19 @@ rev_atime_compare(const FTSENT ** first, const FTSENT ** second) {
         else
                 return -1;
 }
+
+int
+ctime_compare(const FTSENT ** first, const FTSENT ** second) {
+        if ((*first)->fts_statp->st_ctime >= (*second)->fts_statp->st_ctime)
+                return -1;
+        else
+                return 1; 
+}
+
+int
+rev_ctime_compare(const FTSENT ** first, const FTSENT ** second) {
+        if ((*first)->fts_statp->st_ctime >= (*second)->fts_statp->st_ctime)
+                return 1;
+        else
+                return -1;
+}

@@ -86,7 +86,7 @@ is_exec(char* name) {
 void
 FTS_Open(FTS **ftsp, int fts_options, char *p,
 	int is_a_on, int is_r_on, int is_S_on,
-	int is_t_on, int is_u_on) {
+	int is_t_on, int is_u_on, int is_c_on) {
 	char *pp[2];
 	pp[0] = p;
 	pp[1] = NULL;
@@ -107,6 +107,9 @@ FTS_Open(FTS **ftsp, int fts_options, char *p,
 		if(is_u_on)
 			*ftsp = fts_open(pp, fts_options, 
 					&rev_atime_compare);
+		if(is_c_on)
+			*ftsp = fts_open(pp, fts_options,
+					&rev_ctime_compare);
 	} else {
 		*ftsp = fts_open(pp, fts_options, &name_compare);
 
@@ -119,6 +122,9 @@ FTS_Open(FTS **ftsp, int fts_options, char *p,
 		if(is_u_on)
 			*ftsp = fts_open(pp, fts_options, 
 					&atime_compare);
+		if(is_c_on)
+			*ftsp = fts_open(pp, fts_options,
+					&ctime_compare);
 	}    
         
 	if(*ftsp == NULL) {
