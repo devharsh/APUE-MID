@@ -16,6 +16,11 @@ size_read(double size, char* buf) {
 
 void
 is_print(FTSENT *ent, int *print, int* print_name, int is_a_on, int is_A_on) {
+	if(ent == NULL) {
+		perror("FTSENT pointer error");
+		exit(1);
+	}
+
 	if (ent->fts_name[0] == '.') {
 		if(is_A_on)
 			*print_name = 1;
