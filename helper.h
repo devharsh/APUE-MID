@@ -4,6 +4,7 @@
  */
 
 
+#include <magic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -23,6 +24,12 @@ size_read(double size, char* buf);
  */
 void
 is_print(FTSENT *ent, int* print, int* print_name, int is_a_on, int is_A_on);
+
+/*
+ *
+ */
+int
+is_exec(char* name);
 
 /*
  *

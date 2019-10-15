@@ -17,7 +17,6 @@ int main
 				break;
 			case 'a':
 				is_a_on = 1;
-				is_A_on = 1;	
 				break;
 			case 'c':
 				is_c_on = 1;
@@ -45,7 +44,6 @@ int main
 				break;
 			case 'n':
 				is_n_on = 1;
-				is_l_on = 0;
 				break;
 			case 'q':
 				is_q_on = 1;
@@ -76,9 +74,20 @@ int main
         	}  
     	}  
 
+
 	/* switch overrides */
+	
+	if(is_d_on) {
+                is_a_on = 1;
+                is_R_on = 0;
+        }
+
+	if(is_a_on)
+		is_A_on = 1;
+
 	if(is_n_on)
 		is_l_on = 0;
+
 
 	for(; optind < argc; optind++) {      
 		fhit = 1;
@@ -100,6 +109,9 @@ int main
                 	}
 
 			fts_helper(ent, modeval, buffer, &F_char);
+
+			if(is_exec(ent->fts_name) == 1)
+				F_char = '*';
 
                         grp = getgrgid(ent->fts_statp->st_gid);
                         pwd = getpwuid(ent->fts_statp->st_uid);
@@ -187,119 +199,126 @@ int main
 	}
       
 	if(!fhit) {
-		char cwd[PATH_LIM];
-                char* c = getcwd(cwd, sizeof(cwd));
-		if(c == NULL)
-			perror("getcwd");
-		else {
-			FTS_Open(&ftsp, fts_options, cwd,
-        			 is_a_on, is_r_on, is_S_on,
-        			 is_t_on, is_u_on);
+		char cwd[2];
+		cwd[0] = '.';
+		cwd[1] = '\0';
+		FTS_Open(&ftsp, fts_options, cwd,
+        		 is_a_on, is_r_on, is_S_on,
+        		 is_t_on, is_u_on);
 
-                	while(1) {
-				FTSENT *ent = fts_read(ftsp);
+               	while(1) {
+			FTSENT *ent = fts_read(ftsp);
                                 
-				if(ent == NULL) {
-                                        if(errno == 0)
-                                                break;
-                                        else {
-                                                perror("fts_read");
-                                                exit(1);
-                                        }
-                                }	 
+			if(ent == NULL) {
+       		        	if(errno == 0)
+                	        	break;
+                        	else {
+                        		perror("fts_read");
+                        		exit(1);
+                        	}
+                        }	 
 	
-				fts_helper(ent, modeval, buffer, &F_char);
+			fts_helper(ent, modeval, buffer, &F_char);
+			
+			if(is_d_on) {
+				if(strcmp(ent->fts_name, ".") != 0)
+					continue;
+			}
+	
+			if(is_exec(ent->fts_name) == 1)
+				F_char = '*';
 
-				grp = getgrgid(ent->fts_statp->st_gid);
-                                pwd = getpwuid(ent->fts_statp->st_uid);
+			grp = getgrgid(ent->fts_statp->st_gid);
+                        pwd = getpwuid(ent->fts_statp->st_uid);
 
-				is_print(ent, &print, &print_name, is_a_on, is_A_on);
+			is_print(ent, &print, &print_name, is_a_on, is_A_on);
 
-				if(ent->fts_level == 1 && print && print_name) {
-                                	if(is_i_on)
-                                                printf("%lu ", 
-							ent->fts_statp->st_ino);
+			if(ent->fts_level == 1 && print && print_name) {
+                               	if(is_i_on)
+                                	printf("%lu ", 
+						ent->fts_statp->st_ino);
                                         
-					if(is_s_on) {
-						if(is_h_on && (is_n_on || is_l_on)) {
-							size_read(ent->
-							fts_statp->
-							st_blocks * 512,
-							size_name);
+				if(is_s_on) {
+					if(is_h_on && (is_n_on || is_l_on)) {
+						size_read(ent->
+						fts_statp->
+						st_blocks * 512,
+						size_name);
 
-							printf("%s ",
-							size_name);
-                                                } else
-							printf("%ld ", 
+						printf("%s ",
+						size_name);
+                                	} else
+						printf("%ld ", 
 							ent->fts_statp->
 							st_blocks);
-					}
+				}
 
-					if(is_n_on || is_l_on)
-                                        	printf("%s\t%d\t",
-                                                	modeval, 
-							ent->fts_statp->
-							st_nlink);
-                                	if(is_n_on)
-						printf("%d\t%d\t",
-							pwd->pw_uid, 
-							grp->gr_gid);
-					if(is_l_on)
-						printf("%s\t%s\t",
-							pwd->pw_name, 
-							grp->gr_name);
+				if(is_n_on || is_l_on)
+                                       	printf("%s\t%d\t",
+                                               	modeval, 
+						ent->fts_statp->
+						st_nlink);
+                               	if(is_n_on)
+					printf("%d\t%d\t",
+						pwd->pw_uid, 
+						grp->gr_gid);
+				if(is_l_on)
+					printf("%s\t%s\t",
+						pwd->pw_name, 
+						grp->gr_name);
 					
-					if(is_n_on || is_l_on) {
-						if(is_h_on) {
-							size_read(ent->	
-							fts_statp->st_size,
-							size_name);
+				if(is_n_on || is_l_on) {
+					if(is_h_on) {
+						size_read(ent->	
+						fts_statp->st_size,
+						size_name);
 
-							printf("%s\t%s\t",
-								size_name,
-								buffer);
-						} else
-							printf("%ld\t%s\t",
-							ent->fts_statp->
-							st_size,
+						printf("%s\t%s\t",
+							size_name,
 							buffer);
-					}
+					} else
+						printf("%ld\t%s\t",
+						ent->fts_statp->
+						st_size,
+						buffer);
+				}
  
-					if(is_n_on || is_l_on || is_s_on) {
-						if(is_h_on)
-							total_size +=
-							ent->fts_statp->
-							st_size;
-						else
-							total_blocks += 
-							ent->fts_statp->
-							st_blocks;
-					}
+				if(is_n_on || is_l_on || is_s_on) {
+					if(is_h_on)
+						total_size +=
+						ent->fts_statp->
+						st_size;
+					else
+						total_blocks += 
+						ent->fts_statp->
+						st_blocks;
+				}
 			
-					printf("%s", ent->fts_name);
+				printf("%s", ent->fts_name);
 
-					if(is_F_on) 
-						printf("%c", F_char);
-                                	if(is_n_on || is_l_on || is_s_on)
-                                        	printf("\n");
-                                	else
-                                        	printf("\t");
-                        	}                                        
-                	}      
-        	
+				if(is_F_on) 
+					printf("%c", F_char);
+                               	if(is_n_on || is_l_on || is_s_on)
+                                       	printf("\n");
+                               	else
+                                       	printf("\t");
+                        }                                        
+		}
+        
+		if(!is_d_on) {	
                 	if(is_n_on || is_l_on || is_s_on) {
 				if(is_h_on) {
 					size_read(total_size, size_name);
 					printf("total %s", size_name);
 				} else       
-                       			printf("total %d", total_blocks);
+                   			printf("total %d", total_blocks);
 			}
- 
-                	if(fts_close(ftsp) == -1)
-                       		perror("fts_close");
-
-			printf("\n");
 		}
+ 
+               	if(fts_close(ftsp) == -1)
+                  	perror("fts_close");
+
+		printf("\n");
 	}
 
 	return 0; 

@@ -7,7 +7,7 @@ default: $(TARGET)
 all: default
 
 $(TARGET): ls.o helper.o cmp.o 
-	$(CC) $(CFLAGS) -o $(TARGET) ls.o helper.o cmp.o 
+	$(CC) $(CFLAGS) -o $(TARGET) ls.o helper.o cmp.o /usr/lib/libmagic.so 
 
 ls.o: ls.c ls.h
 	$(CC) $(CFLAGS) -c ls.c

@@ -52,6 +52,37 @@ is_print(FTSENT *ent, int *print, int* print_name, int is_a_on, int is_A_on) {
 }
 
 
+int
+is_exec(char* name) {
+	struct magic_set *ms;
+   	const char *result;
+
+   	ms = magic_open(MAGIC_RAW);
+   	
+	if (ms == NULL) {
+      		(void)fprintf(stderr, "ERROR opening MAGIC_NONE: out of memory\n");
+      		return -1;
+   	}
+   
+	if (magic_load(ms, NULL) == -1) {
+		(void)fprintf(stderr, "ERROR loading with NULL file: %s\n", magic_error(ms));
+      		return -1;
+   	}
+
+	if ((result = magic_file(ms, name)) == NULL) {
+		(void)fprintf(stderr, "ERROR loading file %s: %s\n", name, magic_error(ms));
+            	return -1;
+        } else {
+             	if (strstr(result, (const char *)"executable")) 
+        		return 1;
+		else
+			return 0;
+	}
+
+	magic_close(ms);
+}
+
+
 void
 FTS_Open(FTS **ftsp, int fts_options, char *p,
 	int is_a_on, int is_r_on, int is_S_on,
