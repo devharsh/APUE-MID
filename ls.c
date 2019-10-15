@@ -115,11 +115,11 @@ int main
                                         continue;
                         }
 
-			if(is_exec(ent->fts_name) == 1)
-				F_char = '*';
+                        if((grp = getgrgid(ent->fts_statp->st_gid)) == NULL)
+				continue;
 
-                        grp = getgrgid(ent->fts_statp->st_gid);
-                        pwd = getpwuid(ent->fts_statp->st_uid);
+			if((pwd = getpwuid(ent->fts_statp->st_uid)) == NULL)
+				continue;
 	
 			is_print(ent, &print, &print_name, is_a_on, is_A_on);
 			
@@ -244,11 +244,11 @@ int main
 					continue;
 			}
 	
-			if(is_exec(ent->fts_name) == 1)
-				F_char = '*';
+			if((grp = getgrgid(ent->fts_statp->st_gid)) == NULL)
+                                continue;
 
-			grp = getgrgid(ent->fts_statp->st_gid);
-                        pwd = getpwuid(ent->fts_statp->st_uid);
+                        if((pwd = getpwuid(ent->fts_statp->st_uid)) == NULL)
+                                continue;
 
 			is_print(ent, &print, &print_name, is_a_on, is_A_on);
 

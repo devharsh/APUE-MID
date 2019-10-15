@@ -130,7 +130,8 @@ FTS_Open(FTS **ftsp, int fts_options, char *p,
 
 void
 fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char) {
-        mode_t perm = ent->fts_statp->st_mode;
+        struct tm* time_c;
+	mode_t perm = ent->fts_statp->st_mode;
  	strmode(perm, modeval);
        
         if(S_ISREG(perm))
@@ -151,7 +152,10 @@ fts_helper(FTSENT *ent, char *modeval, char *buffer, char *F_char) {
                 *F_char = '%';
         else
                 *F_char = 0;
+
+	if(is_exec(ent->fts_name) == 1)
+		*F_char = '*';
  
-        struct tm* time_c = localtime(&ent->fts_statp->st_ctime);
+	time_c = localtime(&ent->fts_statp->st_ctime);
         strftime(buffer, 80, "%b %d %H:%M", time_c);
 }

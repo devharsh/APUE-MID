@@ -1,6 +1,6 @@
 TARGET = ls
 CC = cc
-CFLAGS  = -g -Wall -Werror -Wextra
+CFLAGS  = -ansi -g -Wall -Werror -Wextra -Wformat=2 -Wjump-misses-init -Wlogical-op -Wpedantic -Wshadow
 RM = rm -f
 
 default: $(TARGET)
