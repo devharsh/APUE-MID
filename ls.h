@@ -20,6 +20,7 @@ int fhit = 0;
 int print = 0;
 int print_name = 0;
 int total_blocks = 0;
+int block_size = 1;
 
 int is_A_on = 0;
 int is_a_on = 0;
@@ -46,8 +47,13 @@ int fts_options = FTS_COMFOLLOW | FTS_NOCHDIR | FTS_PHYSICAL;
 double total_size = 0;
 
 char F_char;
+
+char* block_value;
+char* block_ptr;
+
 char size_name[12];
 char modeval[12];
+char time_zone[64];
 char buffer[80];
 
 struct group* grp;

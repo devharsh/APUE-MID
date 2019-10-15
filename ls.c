@@ -88,6 +88,25 @@ int main
 	if(is_n_on)
 		is_l_on = 0;
 
+	/* get environment variables */
+ 
+	block_value = getenv("TZ");
+
+	if(block_value!=NULL) {
+		strcpy(time_zone, getenv("TZ"));
+		setenv("TZ", time_zone, 1);
+   		tzset();
+	}
+
+	block_value = getenv("BLOCKSIZE");
+
+	if(block_value!=NULL) {
+        	long bs;
+        	bs = strtol(block_value, &block_ptr, 10);
+        	if(bs > 512)
+        		block_size = bs / 512;
+        }
+
 
 	for(; optind < argc; optind++) {      
 		fhit = 1;
@@ -138,9 +157,9 @@ int main
                                 
 				if(is_s_on) {
 					if(is_h_on && (is_n_on || is_l_on)) {
-                                		size_read(ent->
+						size_read(ent->
                                 			fts_statp->
-                                			st_blocks * 512,
+                                			st_blocks * 512 / block_size,
                                 			size_name);
 
                                 		printf("%s ",
@@ -148,7 +167,7 @@ int main
                                 	} else
                                 		printf("%ld ",
                                 			ent->fts_statp->
-                                			st_blocks);
+                                			st_blocks / block_size);
                                 }
 
                         	if(is_n_on || is_l_on)
@@ -184,7 +203,7 @@ int main
 						ent->fts_statp->st_size;
 					else
 						total_blocks += 
-						ent->fts_statp->st_blocks;
+						ent->fts_statp->st_blocks / block_size;
 				}
 			
 				if(is_d_on)
@@ -261,7 +280,7 @@ int main
 					if(is_h_on && (is_n_on || is_l_on)) {
 						size_read(ent->
 						fts_statp->
-						st_blocks * 512,
+						st_blocks * 512 / block_size,
 						size_name);
 
 						printf("%s ",
@@ -269,7 +288,7 @@ int main
                                 	} else
 						printf("%ld ", 
 							ent->fts_statp->
-							st_blocks);
+							st_blocks / block_size);
 				}
 
 				if(is_n_on || is_l_on)
@@ -310,7 +329,7 @@ int main
 					else
 						total_blocks += 
 						ent->fts_statp->
-						st_blocks;
+						st_blocks / block_size;
 				}
 			
 				printf("%s", ent->fts_name);
